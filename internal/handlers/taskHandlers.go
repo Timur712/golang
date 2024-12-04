@@ -15,7 +15,7 @@ func RegisterRoutes(e *echo.Echo, service taskService.TaskService) {
 	taskSvc = service
 	e.GET("/tasks", GetTaskHandler)
 	e.POST("/tasks", PostTasksHandler)
-	e.PATCH("/tasks/:id", PatchTaskHandler)
+	e.PATCH("/tasks", PatchTaskHandler)
 	e.DELETE("/tasks/:id", DeleteTaskHandler)
 }
 
@@ -42,17 +42,18 @@ func PostTasksHandler(c echo.Context) error {
 }
 
 func PatchTaskHandler(c echo.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return utils.ErrorResponse(c, http.StatusBadRequest, "Неверный ID")
-	}
-
+	
 	var task taskService.Task
 	if err := c.Bind(&task); err != nil {
 		return utils.ErrorResponse(c, http.StatusBadRequest, "Неверный ввод данных")
 	}
 
-	updatedTask, err := taskSvc.UpdateTask(uint(id), task)
+	
+	if task.ID == 0 {
+		return utils.ErrorResponse(c, http.StatusBadRequest, "Неверный ID")
+	}
+
+	updatedTask, err := taskSvc.UpdateTask(task.ID, task)
 	if err != nil {
 		return utils.ErrorResponse(c, http.StatusInternalServerError, "Не удалось обновить задачу")
 	}
@@ -63,7 +64,7 @@ func PatchTaskHandler(c echo.Context) error {
 func DeleteTaskHandler(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		return utils.ErrorResponse(c, http.StatusBadRequest, "Неверный ID")
+	return utils.ErrorResponse(c, http.StatusBadRequest, "Неверный ID")
 	}
 
 	if err := taskSvc.DeleteTask(uint(id)); err != nil {
